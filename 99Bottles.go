@@ -14,6 +14,17 @@ import (
     "strconv"
 )
 
+func fillBottles(bottlesOfBeer int, bottles chan<- int){
+    // Fill up the bottles' buffer
+    for bottlesOfBeer >= 0 {
+        bottles <- bottlesOfBeer
+        bottlesOfBeer--
+    }
+    
+    // Close the bottles channel when we're done
+    close(bottles)
+
+}
 
 func prepareLyrics(bottles <-chan int, lyrics chan<- string) {
 
@@ -45,6 +56,12 @@ func lyricsRefrain(bottle int) string {
     }
 }
 
+func printLyrics(lyrics <-chan string) {
+    // Receive and print from lyrics' buffer
+    for lyric := range lyrics {
+        fmt.Print(lyric)
+    }
+}
 
 
 func main() {
@@ -54,21 +71,7 @@ func main() {
     // Create channels with buffers
     bottles, lyrics := make(chan int, bottlesOfBeer), make(chan string, bottlesOfBeer)
     
-    // TODO: Figure out how to divide the task so that it can be scaled to a proper non-blocking multithreaded task
+    go fillBottles(bottlesOfBeer, bottles)
     go prepareLyrics(bottles, lyrics)
-    
-    // Fill up the bottles' buffer
-    for bottlesOfBeer >= 0 {
-        bottles <- bottlesOfBeer
-        bottlesOfBeer--
-    }
-    
-    // Close the bottles channel when we're done
-    close(bottles)
-    
-    // Receive and print from lyrics' buffer
-    for lyric := range lyrics {
-        fmt.Print(lyric)
-    }
-   
+    printLyrics(lyrics)
 }
